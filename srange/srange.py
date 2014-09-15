@@ -49,6 +49,7 @@ class srange:
 	last is the last number obtained from this range, use -Inf to get start of range, it returns the next
 
 	variables and methods that you may be interested in:
+
 		=======================	===================================================================================
 		variables of interest		description
 		=======================	===================================================================================
