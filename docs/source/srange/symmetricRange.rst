@@ -1,6 +1,6 @@
 
 :mod:`symmetricRange` Module
----------------------------
+-----------------------------
 
 .. automodule:: srange.symmetricRange
     :members:
