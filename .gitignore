@@ -1,0 +1,30 @@
+old/
+other/
+bin/
+tests/
+
+# Mac detritus
+.DS_Store
+._*
+
+# Windows Junk
+Thumbs.db
+
+
+#############
+## Python
+#############
+
+*.py[co]
+
+# Packages
+*.egg
+*.egg-info
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
