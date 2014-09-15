@@ -22,7 +22,7 @@ class srange:
 	"""
 	String-range class.
 
-	This class provides functions to convert a string representing integers and
+	This  class provides functions to convert a string representing integers and
 	ranges of integers to an object which can be iterated over all the values
 	contained in the string and a list of individual values or subranges can be
 	retrieved.
