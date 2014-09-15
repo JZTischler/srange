@@ -50,38 +50,38 @@ class srange:
 
 	variables and methods that you may be interested in:
 
-		=======================	===================================================================================
-		variables of interest		description
-		=======================	===================================================================================
-		self.r                  the input string, after formatting and compacting
-		self.previous_item		the previous value produced, initially set very low
-		self.auto_reset			if True (default), then previous_item is reset to min at each call to __iter__
-		=======================	===================================================================================
+	=======================	===================================================================================
+	variables of interest		description
+	=======================	===================================================================================
+	self.r                  the input string, after formatting and compacting
+	self.previous_item		the previous value produced, initially set very low
+	self.auto_reset			if True (default), then previous_item is reset to min at each call to __iter__
+	=======================	===================================================================================
 
-		=======================	===================================================================================
-		methods of interest			action
-		=======================	===================================================================================
-		next()					returns next value, updates previous_item too
-		reset_previous()		reset the iterator so it starts with the first value
-		after(prev)				returns value that follows prev, without changing the current point in iteration
-		first()					returns the first number in the range, for self.r="3,5,9-20", self.first() returns 3
-		last()					returns the last number in the range, for self.r="3,5,9-20", self.last() returns 20
-		len()					returns number of points in the range, for self.r="3,5,9-20", self.len() returns 14
-		is_in_range(m)			returns True if m is in self.r, otherwise False
-		index(ipnt)				return the ipntth number from range, first number is ipnt==0,  returns None if ipnt negative or too big
-		val2index(m)			returns index into r that corresponds to m. e.g. for r='3,5,9-20', m=5 returns 1.
-		sub_range(start,n,...)	returns a new range that is a sub range of current one, setLast=False
-		list(self)				returns a list where each element is a value in the range, CAUTION this can make a VERY big list
-		=======================	===================================================================================
+	=======================	===================================================================================
+	methods of interest			action
+	=======================	===================================================================================
+	next()					returns next value, updates previous_item too
+	reset_previous()		reset the iterator so it starts with the first value
+	after(prev)				returns value that follows prev, without changing the current point in iteration
+	first()					returns the first number in the range, for self.r="3,5,9-20", self.first() returns 3
+	last()					returns the last number in the range, for self.r="3,5,9-20", self.last() returns 20
+	len()					returns number of points in the range, for self.r="3,5,9-20", self.len() returns 14
+	is_in_range(m)			returns True if m is in self.r, otherwise False
+	index(ipnt)				return the ipntth number from range, first number is ipnt==0,  returns None if ipnt negative or too big
+	val2index(m)			returns index into r that corresponds to m. e.g. for r='3,5,9-20', m=5 returns 1.
+	sub_range(start,n,...)	returns a new range that is a sub range of current one, setLast=False
+	list(self)				returns a list where each element is a value in the range, CAUTION this can make a VERY big list
+	=======================	===================================================================================
 
-		=====================	=======================	===================================================================
-		special methods			command						result using: sr = srange('1-4')
-		=====================	=======================	===================================================================
-		__getitem__(n)			print sr[2]					3
-		__len__()               print len(sr)				4
-		__str__()               print str(sr)				1-4
-		__repr__()              print repr(sr)				srange('1-4', len=4, previous=0, auto_reset=True)
-		=====================	=======================	===================================================================
+	=====================	=======================	===================================================================
+	special methods			command						result using: sr = srange('1-4')
+	=====================	=======================	===================================================================
+	__getitem__(n)			print sr[2]					3
+	__len__()               print len(sr)				4
+	__str__()               print str(sr)				1-4
+	__repr__()              print repr(sr)				srange('1-4', len=4, previous=0, auto_reset=True)
+	=====================	=======================	===================================================================
 	"""
 
 	def __init__(self, r='', auto_reset=True):
