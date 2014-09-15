@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# symmetricRange.py
+# symrange.py
 #
 # $Id:    $
 # $URL: $
@@ -17,55 +17,64 @@ __date__	=	"$Date: $"
 __id__		=	"$Id: $"
 
 
-class symmetricRange:
+class symrange:
 	"""
-	symmetricRange class.
+	symrange class.
 
 	This class provides functions to loop symmetrically outward from 0
 	i.e., 0,1,-1,2,-2,3,-3,...
 	endVal can only be a positive integer or 0
 
 	EXAMPLE::
-		for i in symmetricRange(2): print i
+		>>> for i in symrange(2): print i
 		prints:
 		0 1 -1 2 -2 3 -3
 
-		for i in symmetricRange(2,True): print i
+		>>> for i in symrange(2,True): print i
 		prints:
 		0 -1 1 -2 2 -3 3
 
 	NOTE:
-		symmetricRange can only contain integers.
+		symrange can only contain integers.
 
-	variables that you may be interested in are:
-		self.endVal			the highest value +/- returned, this is always >= 0
-		self.negativeFirst	if True then 0,-1,+1,-2,+2,...   Otherwise 0,+1,-1,+2,-2,...
-		self.auto_reset		if True (default), then previous is reset to None at each call to __iter__
-		self.length			total number of items in range, you can also get this from len(symmetricRange(n)) or symmetricRange(n).len()
-		self.previous		last value returned by the iterator, when previous==None, then a call to next() returns 0
+	variables and methods that you may be interested in:
+		====================	===========================================================================================
+		variables
+		====================	===========================================================================================
+		self.endVal				the highest value +/- returned, this is always >= 0
+		self.negativeFirst		if True then 0,-1,+1,-2,+2,...   Otherwise 0,+1,-1,+2,-2,...
+		self.auto_reset			if True (default), then previous is reset to None at each call to __iter__
+		self.length				total number of items in range, you can also get this from len(symrange(n)) or symrange(n).len()
+		self.previous			last value returned by the iterator, when previous==None, then a call to next() returns 0
+		====================	===========================================================================================
 
-	methods that you may be interested in are:
-		next()				returns next value, updates previous too
-		last()				returns the last number in the range, for self.r="3,5,9-20", self.last() returns 20
-		len()				returns number of points in the range, for self.r="3,5,9-20", self.len() returns 14
-		first()				returns first value of iteration, always returns 0
-		after(prev)			returns value that follows prev, without changing the current point in iteration
-		index(ipnt)			return the ipntth number from range, first number is ipnt==0, returns None if ipnt negative or too big, same as symmetricRange(2)[ipnt]
-		val2index(m)		returns index into range that corresponds to m. e.g. for r='0,-1,1,-2,2', m=1 returns 2.
-		list(self)			returns a list where each element is a value in the range, CAUTION this can make a VERY big list if n is large
+		====================	===========================================================================================
+		methods
+		====================	===========================================================================================
+		next()					returns next value, updates previous too
+		last()					returns the last number in the range, for self.r="3,5,9-20", self.last() returns 20
+		len()					returns number of points in the range, for self.r="3,5,9-20", self.len() returns 14
+		first()					returns first value of iteration, always returns 0
+		after(prev)				returns value that follows prev, without changing the current point in iteration
+		index(ipnt)				return the ipntth number from range, first number is ipnt==0, returns None if ipnt negative or too big, same as symrange(2)[ipnt]
+		val2index(m)			returns index into range that corresponds to m. e.g. for r='0,-1,1,-2,2', m=1 returns 2.
+		list(self)				returns a list where each element is a value in the range, CAUTION this can make a VERY big list if n is large
+		====================	===========================================================================================
 
-		there are also methods for __len__() and __getitem__(n), __str__(), __repr__()  so you can also use the following syntax:
-		syr = symmetricRange(5)
-		print syr[3]		# prints 2
-		print len(syr)		# prints 11
-		print "%s" % syr	# prints an informative string
-		print "%r" % syr	# prints a string with values of {endVal, negativeFirst, auto_reset, length, previous}
+		=====================	=======================	===================================================================
+		special methods			command						result using: syr = symrange(5)
+		=====================	=======================	===================================================================
+		__getitem__(n)			print syr[3]				2
+		__len__()               print len(syr)				11
+		__str__()               print str(syr)				symrange starting from 0, going to 5, doing positives first, current value = "initialized to start"
+		__repr__()              print repr(syr)				symrange[endVal=5, negativeFirst=False, previous=None, len=11, auto_reset=True]
+		=====================	=======================	===================================================================
 	"""
 
 	def __init__(self, endVal, negativeFirst=False, auto_reset=True):
 		"""
-		Initialize the symmetricRange instance.
-		If negativeFirst is True, then symmetricRange(2) goes:  0 -1 1 -2 2 -3 3, (negatives first)
+		Initialize the symrange instance.
+		If negativeFirst is True, then symrange(2) goes:  0 -1 1 -2 2 -3 3, (negatives first)
 		"""
 		try:	self.endVal = int(round(endVal))
 		except:	raise TypeError('endVal must be an int >= 0, not %r' % endVal)
@@ -90,7 +99,7 @@ class symmetricRange:
 
 
 	def next(self):
-		""" Return the next value in the symmetricRange. """
+		""" Return the next value in the symrange. """
 		if self.previous is None:			# at start
 			self.previous = 0
 		elif self.negativeFirst and self.previous<0:
@@ -142,7 +151,7 @@ class symmetricRange:
 		"""
 		Returns the n-th element from the range, zero based, n==0 is first element.
 		This method uses but does not change any internal variables, e.g. no self.xxxx
-		This functionality also available by symmetricRange(2)[n], which calles __getitem__() below
+		This functionality also available by symrange(2)[n], which calles __getitem__() below
 		"""
 		try:	n = int(n)
 		except:	raise TypeError('n = %r is not an integer' % n)
@@ -160,17 +169,17 @@ class symmetricRange:
 
 
 	def __getitem__(self, n):
-		""" Return the n-th element in the range. This allows use of the symmetricRange(3)[i] syntax """
+		""" Return the n-th element in the range. This allows use of the symrange(3)[i] syntax """
 		return self.index(n)
 
 
 	def val2index(self, val):
 		"""
-		Return the index into the symmetricRange that produces val.
+		Return the index into the symrange that produces val.
 		This method uses but does not change any internal variables, e.g. no self.xxxx
 
 		EXAMPLE::
-			>>> sr = symmetricRange(4)
+			>>> sr = symrange(4)
 			>>> print sr.val2index(3)
 			5
 		"""
@@ -186,17 +195,17 @@ class symmetricRange:
 
 	def list(self):
 		"""
-		Expands the symmetricRange into a standard python list.
+		Expands the symrange into a standard python list.
 		This method uses but does not change any internal variables, e.g. no self.xxxx
 
 		EXAMPLE::
-			>>> print symmetricRange(2).list()
+			>>> print symrange(2).list()
 			[0, 1, -1, 2, -2]
 
 		CAUTION:
 			The following statement::
 
-				>>> symmetricRange(100000).list()
+				>>> symrange(100000).list()
 
 			will produce a list with 200001 elements!
 
@@ -218,23 +227,23 @@ class symmetricRange:
 
 
 	def __len__(self):
-		""" This allows use of   len(symmetricRange(3)) syntax """
+		""" This allows use of   len(symrange(3)) syntax """
 		return self.length
 
 	def len(self):
-		""" Return the number of items in the symmetricRange. Usage: as symmetricRange(3).len() """
+		""" Return the number of items in the symrange. Usage: as symrange(3).len() """
 		return self.length
 
 
 	def __str__(self):
-		""" Return string value for symmetricRange. """
+		""" Return string value for symrange. """
 		if self.negativeFirst:	sss = 'negatives'
 		else:					sss = 'positives'
 		if self.previous is None:	current = '"initialized to start"'
 		else:					current = str(self.previous)
-		return 'symmetricRange starting from 0, going to %d, doing %s first, current value = %s' % (self.endVal, sss, current)
+		return 'symrange starting from 0, going to %d, doing %s first, current value = %s' % (self.endVal, sss, current)
 
 	def __repr__(self):
-		""" Return printable representation for a symmetricRange. """
-		return 'symmetricRange[endVal=%r, negativeFirst=%r, previous=%r, len=%r, auto_reset=%r]' % (self.endVal, self.negativeFirst, self.previous, self.length, self.auto_reset)
+		""" Return printable representation for a symrange. """
+		return 'symrange[endVal=%r, negativeFirst=%r, previous=%r, len=%r, auto_reset=%r]' % (self.endVal, self.negativeFirst, self.previous, self.length, self.auto_reset)
 
