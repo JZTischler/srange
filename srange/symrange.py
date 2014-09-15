@@ -38,37 +38,38 @@ class symrange:
 		symrange can only contain integers.
 
 	variables and methods that you may be interested in:
-		====================	===========================================================================================
-		variables
-		====================	===========================================================================================
-		self.endVal				the highest value +/- returned, this is always >= 0
-		self.negativeFirst		if True then 0,-1,+1,-2,+2,...   Otherwise 0,+1,-1,+2,-2,...
-		self.auto_reset			if True (default), then previous is reset to None at each call to __iter__
-		self.length				total number of items in range, you can also get this from len(symrange(n)) or symrange(n).len()
-		self.previous			last value returned by the iterator, when previous==None, then a call to next() returns 0
-		====================	===========================================================================================
 
-		====================	===========================================================================================
-		methods
-		====================	===========================================================================================
-		next()					returns next value, updates previous too
-		last()					returns the last number in the range, for self.r="3,5,9-20", self.last() returns 20
-		len()					returns number of points in the range, for self.r="3,5,9-20", self.len() returns 14
-		first()					returns first value of iteration, always returns 0
-		after(prev)				returns value that follows prev, without changing the current point in iteration
-		index(ipnt)				return the ipntth number from range, first number is ipnt==0, returns None if ipnt negative or too big, same as symrange(2)[ipnt]
-		val2index(m)			returns index into range that corresponds to m. e.g. for r='0,-1,1,-2,2', m=1 returns 2.
-		list(self)				returns a list where each element is a value in the range, CAUTION this can make a VERY big list if n is large
-		====================	===========================================================================================
+	====================    ===========================================================================================
+	variables
+	====================    ===========================================================================================
+	self.endVal             the highest value +/- returned, this is always >= 0
+	self.negativeFirst      if True then 0,-1,+1,-2,+2,...   Otherwise 0,+1,-1,+2,-2,...
+	self.auto_reset         if True (default), then previous is reset to None at each call to __iter__
+	self.length             total number of items in range, you can also get this from len(symrange(n)) or symrange(n).len()
+	self.previous           last value returned by the iterator, when previous==None, then a call to next() returns 0
+	====================    ===========================================================================================
 
-		=====================	=======================	===================================================================
-		special methods			command						result using: syr = symrange(5)
-		=====================	=======================	===================================================================
-		__getitem__(n)			print syr[3]				2
-		__len__()               print len(syr)				11
-		__str__()               print str(syr)				symrange starting from 0, going to 5, doing positives first, current value = "initialized to start"
-		__repr__()              print repr(syr)				symrange[endVal=5, negativeFirst=False, previous=None, len=11, auto_reset=True]
-		=====================	=======================	===================================================================
+	====================    ===========================================================================================
+	methods
+	====================    ===========================================================================================
+	next()                  returns next value, updates previous too
+	last()                  returns the last number in the range, for self.r="3,5,9-20", self.last() returns 20
+	len()                   returns number of points in the range, for self.r="3,5,9-20", self.len() returns 14
+	first()                 returns first value of iteration, always returns 0
+	after(prev)             returns value that follows prev, without changing the current point in iteration
+	index(ipnt)             return the ipntth number from range, first number is ipnt==0, returns None if ipnt negative or too big, same as symrange(2)[ipnt]
+	val2index(m)            returns index into range that corresponds to m. e.g. for r='0,-1,1,-2,2', m=1 returns 2.
+	list(self)              returns a list where each element is a value in the range, CAUTION this can make a VERY big list if n is large
+	====================    ===========================================================================================
+
+	=====================   =====================     ===================================================================
+	special methods         command                     result using: syr = symrange(5)
+	=====================   =====================     ===================================================================
+	__getitem__(n)          print syr[3]                 2
+	__len__()               print len(syr)              11
+	__str__()               print str(syr)              symrange starting from 0, going to 5, doing positives first, current value = "initialized to start"
+	__repr__()              print repr(syr)             symrange[endVal=5, negativeFirst=False, previous=None, len=11, auto_reset=True]
+	=====================   =====================     ===================================================================
 	"""
 
 	def __init__(self, endVal, negativeFirst=False, auto_reset=True):

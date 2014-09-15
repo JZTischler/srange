@@ -44,11 +44,12 @@ class srange:
 		robust and forgiving. There is no reason one should not specify sub-
 		ranges in arbitrary orders.
 
+	The range is checked to be monotonic, it returns None if no more values
+	last is the last number obtained from this range,
+	use -Inf to get start of range, it returns the next
 
-	the range is checked to be monotonic, it returns None if no more values
-	last is the last number obtained from this range, use -Inf to get start of range, it returns the next
+	variables and methods that you may be interested in
 
-	variables and methods that you may be interested in:
 	======================= ===================================================================================
 	variables of interest     description
 	======================= ===================================================================================
