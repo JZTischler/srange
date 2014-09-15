@@ -62,14 +62,14 @@ class symrange:
 	list(self)              returns a list where each element is a value in the range, CAUTION this can make a VERY big list if n is large
 	====================    ===========================================================================================
 
-	=====================   =====================     ===================================================================
-	special methods         command                     result using: syr = symrange(5)
-	=====================   =====================     ===================================================================
+	=====================   ======================== ===================================================================
+	special methods          command                    result using: syr = symrange(5)
+	=====================   ======================== ===================================================================
 	__getitem__(n)          print syr[3]                 2
-	__len__()               print len(syr)              11
-	__str__()               print str(syr)              symrange starting from 0, going to 5, doing positives first, current value = "initialized to start"
-	__repr__()              print repr(syr)             symrange[endVal=5, negativeFirst=False, previous=None, len=11, auto_reset=True]
-	=====================   =====================     ===================================================================
+	__len__()               print len(syr)               11
+	__str__()               print str(syr)               symrange starting from 0, going to 5, doing positives first, current value = "initialized to start"
+	__repr__()              print repr(syr)              symrange[endVal=5, negativeFirst=False, previous=None, len=11, auto_reset=True]
+	=====================   ======================== ===================================================================
 	"""
 
 	def __init__(self, endVal, negativeFirst=False, auto_reset=True):
