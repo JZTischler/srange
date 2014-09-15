@@ -5,14 +5,14 @@ from setuptools import setup, find_packages, Extension
 import os, sys
 
 verbose=1
-version = open('VERSION').read()
+version = open('VERSION').read().strip()
 long_description = '''
 This class provides functions to convert a string representing integers and
 ranges of integers to an object which can be iterated over all the values
 contained in the string and a list of individual values or subranges can be
 retrieved.
 '''
-license='Argone National Laboratory Open-Source License'
+license='Argonne National Laboratory Open-Source License'
 
 setup (name =  'srange',
 	version = version,
