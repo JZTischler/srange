@@ -22,15 +22,21 @@ class srange:
 	"""
 	String-range class.
 
+
+	Updated to work with both python 2 & 3 (previously only 2) by JZT on June 12, 2020.
+	Also a suite of tests are included at the end.
+	with conversion to python3, also had to deal with i/j --> float, not int
+
+
 	This class provides functions to convert a string representing integers and
 	ranges of integers to an object which can be iterated over all the values
-	contained in the string and a list of individual values or subranges can be
+	contained in the string.  Also, a list of individual values or subranges can be
 	retrieved.
 
 	EXAMPLE::
 		>>> sr = srange("1,3,4-5,8-11,12-13,20")
 		>>> for val in sr:
-					print("%d," % val),
+					print ("%d," % val),
 		1, 3, 4, 5, 8, 9, 10, 11, 12, 13, 20,
 
 	NOTE:
@@ -77,10 +83,10 @@ class srange:
 	=====================   ======================= ===================================================================
 	special methods          command                    result using: sr = srange('1-4')
 	=====================   ======================= ===================================================================
-	__getitem__(n)          print sr[2]                 3
-	__len__()               print len(sr)               4
-	__str__()               print str(sr)               1-4
-	__repr__()              print repr(sr)              srange('1-4', len=4, previous=0, auto_reset=True)
+	__getitem__(n)          print (sr[2])               3
+	__len__()               print (len(sr))             4
+	__str__()               print (str(sr))             1-4
+	__repr__()              print (repr(sr))            srange('1-4', len=4, previous=0, auto_reset=True)
 	=====================   ======================= ===================================================================
 	"""
 
@@ -88,13 +94,28 @@ class srange:
 		"""
 		Initialize the srange instance.
 		"""
+		try:	self.intTypes = (int, long)		# long is only in python2, not 3
+		except:	self.intTypes = (int)
+		try:	self.MAXINT = sys.maxint		# sys.maxint only exists in python2
+		except:	self.MAXINT = sys.maxsize		# for python3, maxsize is a good choice, = (2^63)-1
+
+		# if a numpy array is passed for r, convert r to an integer array
+		try:
+			if isinstance(r[0], numpy.integer):
+				r_int = []						# a new empty array
+				for i in r: r_int.append(int(i))# fill r_int with ints	
+				r = []							# need to remake r[], do not want the name r_int
+				for i in r_int: r.append(i)		# now reset new r[] to input values (but all ints)
+		except:	pass
 
 		# convert input to a list of tuples, each tuple is one simple dash range, e.g. "1-17:2"
-		if type(r) is unicode: r = r.encode()	# convert any unicode to str
-		if type(r) is str:
+		try:
+			if isinstance(r, unicode): r = r.encode()	# convert any unicode to str
+		except:	pass
+		if isinstance(r,str):
 			if r.lower() == 'none': r = ''		# 'none' is same as empty string
 			self.l = self.__string_to_tuple_list(r)
-		elif type(r) in [int, long]:
+		elif isinstance(r, self.intTypes):
 			r = int(r)
 			self.l = [(r,r,1)]
 			r = str(r)
@@ -135,7 +156,11 @@ class srange:
 		""" Return the n-th element in the string range. """
 		return self.index(n)
 
-	def next(self):
+	def __next__(self):							# this is required for python3 iterator
+		""" Return the n-th element in the string range. """
+		return self.next()
+
+	def next(self):								# this is required for python2 iterator
 		""" Return the next value in the string range. Also update self.previous_item. """
 
 		if not self.l:
@@ -156,7 +181,7 @@ class srange:
 
 		EXAMPLE::
 			>>> sr = srange("3,5,9-20")
-			>>> print sr.after(5)
+			>>> print (sr.after(5))
 			9
 		"""
 
@@ -181,7 +206,7 @@ class srange:
 
 		EXAMPLE::
 			>>> sr = srange("3,5,9-20")
-			>>> print sr.first()
+			>>> print (sr.first())
 			3
 		"""
 
@@ -196,7 +221,7 @@ class srange:
 
 		EXAMPLE::
 			>>> sr = srange("3,5,9-20")
-			>>> print sr.last()
+			>>> print (sr.last())
 			20
 		"""
 
@@ -211,7 +236,7 @@ class srange:
 
 		EXAMPLE::
 			>>> sr = srange("3,5,9-20")
-			>>> print sr.len()
+			>>> print (sr.len())
 			14
 		"""
 
@@ -220,7 +245,8 @@ class srange:
 
 		total = 0
 		for (lo, hi, stride) in self.l:
-			total += (hi-lo)/stride + 1			# accumulate length of each simple range
+#			total += (hi-lo)/stride + 1			# accumulate length of each simple range
+			total += int((hi-lo)/stride) + 1	# accumulate length of each simple range, python3 (/ --> float)
 		return total
 
 	def __len__(self):
@@ -237,7 +263,7 @@ class srange:
 
 		if not self.l:
 			return False
-		if not (type(item) is int or type(item) is long):
+		if not isinstance(item, self.intTypes):
 			raise TypeError("Element must be integer number")
 
 		for (lo, hi, stride) in self.l:
@@ -253,14 +279,15 @@ class srange:
 
 		if not self.l:
 			raise ValueError('String range is empty.')
-		elif not (type(n) in [int, long]):
+		elif not isinstance(n, self.intTypes):
 			raise TypeError('Element must be an integer number, not a '+str(type(n)))
 		elif (n < 0):
 			raise ValueError('Index must be non-negative, not '+str(n))
 
 		count = 0
 		for (lo, hi, stride) in self.l:
-			hi_count = count + (hi-lo)/stride	# count at hi
+#			hi_count = count + (hi-lo)/stride	# count at hi
+			hi_count = count + int((hi-lo)/stride)	# count at hi, in python3 i/j --> float
 			if n <= hi_count:
 				return lo + (n-count)*stride
 			count = hi_count + 1
@@ -273,13 +300,13 @@ class srange:
 
 		EXAMPLE::
 			>>> r = '3, 5, 9-20'
-			>>> print val2index(5)
+			>>> print (val2index(5))
 			1
 		"""
 
 		if not self.l:
 			raise ValueError("String range is empty.")
-		elif not (type(val) in [int, long]):
+		elif not isinstance(val, self.intTypes):
 			raise TypeError('Value must be an integer, not a '+str(type(n)))
 
 		index = 0
@@ -306,15 +333,15 @@ class srange:
 
 		EXAMPLE::
 			>>> sr = srange('3,5,9-20')
-			>>> print sr.sub_range(start = 5, n = 3)
+			>>> print (sr.sub_range(start = 5, n = 3))
 			5,9-10
 		"""
 
 		if not self.l:
 			raise ValueError("String range is empty.")
-		elif not (type(start) in [int , long]):
+		elif not isinstance(start, self.intTypes):
 			raise TypeError("Start value (start) must be an integer.")
-		elif not (type(n) in [int , long]):
+		elif not isinstance(n, self.intTypes):
 			raise TypeError("Number of elements (n) must be an integer.")
 		elif n < 0:
 			raise ValueError("Number of elements must be greater zero.")
@@ -329,7 +356,8 @@ class srange:
 			hi = min(lo + (n-1)*stride, hi)
 			if lo>hi:							# nothing in this simple range
 				continue
-			n -= (hi-lo)/stride + 1
+#			n -= (hi-lo)/stride + 1
+			n -= int((hi-lo)/stride) + 1		# in python3 i/j --> float
 			lout.append((lo,hi,stride))
 			if n < 1:
 				break
@@ -348,7 +376,7 @@ class srange:
 		This method uses but does not change any internal variables, e.g. no self.xxxx
 
 		EXAMPLE::
-			>>> print srange("3,5,9-13").list()
+			>>> print (srange("3,5,9-13").list())
 			[3, 5, 9, 10, 11, 12, 13]
 
 		CAUTION:
@@ -377,9 +405,9 @@ class srange:
 		""" Reset previous_item to the lowest possible integer value. """
 		try:
 			l0 = self.l[0]
-			self.previous_item = int(l0[0]-1)	# the srange may need longs (if long, then cannot use maxint)
+			self.previous_item = int(l0[0]-1)	# in python2, the srange may need longs
 		except:
-			self.previous_item = -sys.maxint	# just set to most negative 32bit int
+			self.previous_item = -self.MAXINT	# just set to most negative 32bit int
 
 
 	def __list_to_srange(self, input_list):
@@ -392,11 +420,11 @@ class srange:
 			>>> mylist = [3,5,9,10,11,12]
 			>>> sr = srange('')
 			>>> sr.__list_to_srange(mylist)
-			>>> prints sr
+			>>> print (sr)
 			'3,5,9-12'
 		"""
 
-		if not all(isinstance(n, int) for n in input_list):
+		if not all(isinstance(n, self.intTypes) for n in input_list):
 			raise ValueError("List elements must be integers.")
 
 		new_tuple_list = []
@@ -442,9 +470,9 @@ class srange:
 			lo,mid,hi = s.partition('@')
 			lo = lo.strip()
 			if lo.lower().find('-inf') >= 0:
-				lo = -sys.maxint
+				lo = -self.MAXINT
 			elif lo.lower().find('inf') >= 0:
-				lo = sys.maxint
+				lo = self.MAXINT
 			try:
 				lo = int(lo)
 			except:
@@ -453,9 +481,9 @@ class srange:
 			if(hi):
 				hi = hi.strip()
 				if hi.lower().find('-inf') >= 0:
-					hi = -sys.maxint
+					hi = -self.MAXINT
 				elif hi.lower().find('inf') >= 0:
-					hi = sys.maxint
+					hi = self.MAXINT
 				try:
 					hi = int(hi)
 					hi -= ((hi-lo) % stride)	# ensure that hi matches with stride, remove excess
@@ -505,7 +533,7 @@ class srange:
 		This method neither uses nor changes any internal variables, e.g. no self.xxxx
 
 		EXAMPLE::
-			>>> print self.__tuple_list_to_str([(0, 0, 1), (2, 3, 1), (4, 8, 2)])
+			>>> print (self.__tuple_list_to_str([(0, 0, 1), (2, 3, 1), (4, 8, 2)]))
 			'0,2-3,4-8:2'
 		"""
 
@@ -530,7 +558,7 @@ class srange:
 		EXAMPLE::
 			>>> ## sr = srange('0,2,3,4-8:2')
 			>>> l = self.__compact([(0, 0, 1), (2, 3, 1), (4, 8, 2)])
-			>>> print l
+			>>> print (l)
 			[(1, 4, 1), (6, 6, 1)]
 
 
@@ -608,4 +636,3 @@ class srange:
 
 		lnew.append((last_lo,last_hi,last_stride))							# append the last one
 		return lnew
-
