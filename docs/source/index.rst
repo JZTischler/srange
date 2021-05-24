@@ -1,10 +1,8 @@
-.. srange documentation master file, created by
-   sphinx-quickstart on Sat Aug 23 19:35:51 2014.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+srange - Specify complex integer ranges through strings
+=======================================================
 
-Welcome to srange's documentation!
-==================================
+**srange** is a small package that allows you to specify and iterate over
+ranges of integers via a string representing this range.
 
 Contents:
 
@@ -21,4 +19,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
