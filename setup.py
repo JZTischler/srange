@@ -1,11 +1,14 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-from setuptools import setup, find_packages, Extension
+from setuptools import setup, find_packages
+import os
+import sys
 
-import os, sys
+import versioneer
 
-verbose=1
-version = open('VERSION').read().strip()
+
+version = versioneer.get_version()
 long_description = '''
 This class provides functions to convert a string representing integers and
 ranges of integers to an object which can be iterated over all the values
@@ -14,8 +17,10 @@ retrieved.
 '''
 license='Argonne National Laboratory Open-Source License'
 
-setup (name =  'srange',
+setup(
+	name =  'srange',
 	version = version,
+	cmdclass = versioneer.get_cmdclass(),
 	license = license,
 	description = 'String-range class',
 	long_description = long_description,
@@ -24,8 +29,7 @@ setup (name =  'srange',
 	url='no-URL-yet',
 	download_url='no-URL-yet',
 	platforms='any',
-#	install_requires = ['numpy', ],
-	test_suite="tests", 
+	test_suite="tests",
 	package_dir = {'': '.'},
 	packages = find_packages('.'),
 	classifiers= ['Development Status :: 4 - Beta',
@@ -38,4 +42,4 @@ setup (name =  'srange',
                      'Programming Language :: Python :: 3.6.5',
                      'Topic :: Scientific/Engineering',
                      ],
-      )
+    )
