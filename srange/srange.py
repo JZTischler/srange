@@ -7,6 +7,9 @@ import sys
 __author__	=	"Jon Tischler, <tischler@aps.anl.gov>" +\
 				"Christian M. Schlepuetz, <cschlep@aps.anl.gov>, " +\
 				"Argonne National Laboratory"
+__copyright__ = 'Copyright (c) 2021, Argonne National Laboratory'
+__license__ = 'See license file'
+__docformat__ = 'restructuredtext en'
 
 
 class srange:
