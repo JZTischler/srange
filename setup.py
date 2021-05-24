@@ -32,7 +32,7 @@ setup(
 	test_suite="tests",
 	package_dir = {'': '.'},
 	packages = find_packages('.'),
-	install_requires=['numpy']
+	install_requires=['numpy'],
 	classifiers= ['Development Status :: 4 - Beta',
                      'Intended Audience :: Developers',
                      'License :: OSI Approved :: BSD License',
