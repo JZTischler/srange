@@ -5,7 +5,7 @@ import numpy
 import sys
 
 __author__	=	"Jon Tischler, <tischler@aps.anl.gov>" +\
-				"Christian M. Schlepuetz, <cschlep@aps.anl.gov>, " +\
+				"Christian M. Schlepuetz, " +\
 				"Argonne National Laboratory"
 __copyright__ = 'Copyright (c) 2021, Argonne National Laboratory'
 __license__ = 'See license file'
@@ -25,10 +25,10 @@ class srange:
 	Sub-ranges are comma-separated from each other and can either specify a
 	single ingeger (e.g.: ``6``), a continuous range of integers by specifying
 	the start and end point separated by a dash (e.g.: ``10-14``), or a
-	continuous range of integers with a positive integer step size which is
-	separated from the start and end point by a colon (e.g.: ``20-35:5``).
-	Note that the end points are alwasy included in the range (somewhat
-	contrary to the behavior of standard python ranges).
+	continuous range of integers with a positive integer step size, also called
+	a `stride`, which is separated from the start and end point by a colon
+	(e.g.: ``20-35:5``). Note that the end points are always included in the
+	range (somewhat contrary to the behavior of standard python ranges).
 
 	Example
 	-------
