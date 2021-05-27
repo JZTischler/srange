@@ -4,7 +4,7 @@
 import numpy
 import sys
 
-__author__	=	"Jon Tischler, <tischler@aps.anl.gov>" +\
+__author__	=	"Jon Tischler, <tischler@aps.anl.gov>, " +\
 				"Christian M. Schlepuetz, " +\
 				"Argonne National Laboratory"
 __copyright__ = 'Copyright (c) 2021, Argonne National Laboratory'
@@ -477,7 +477,7 @@ class srange:
 		if not self.l:
 			raise ValueError("String range is empty.")
 		elif not isinstance(val, self.intTypes):
-			raise TypeError('Value must be an integer, not a ' + str(type(n)))
+			raise TypeError('Value must be an integer, not a ' + str(type(val)))
 
 		index = 0
 		for (lo, hi, stride) in self.l:
