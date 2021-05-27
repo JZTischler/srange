@@ -1,12 +1,35 @@
-.. srange documentation master file, created by
-   sphinx-quickstart on Sat Aug 23 19:35:51 2014.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+srange - Specify complex integer ranges through strings
+=======================================================
 
-Welcome to srange's documentation!
-==================================
+`srange` is a small package that allows you to specify and iterate over
+ranges of integers via a string representing this range.
 
-Contents:
+
+Package contents:
+~~~~~~~~~~~~~~~~~
+
+There are two separate modules available in `srange`:
+
+======================== ===================================================
+module                   description
+======================== ===================================================
+:mod:`srange.srange`     Express complex integer ranges in a string format and iterate over them
+:mod:`srange.symrange`   Loop symmetrically outward from 0 alternating positive and negative values: 0, -1, 1, -2, 2, ...
+======================== ===================================================
+
+
+Installation
+~~~~~~~~~~~~
+
+The `srange` package is provided for easy installation with conda:
+
+.. code-block:: bash
+
+   conda install -c schlepuetz srange
+
+
+Documentation contents:
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. toctree::
    :maxdepth: 1
@@ -21,4 +44,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

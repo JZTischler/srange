@@ -1,0 +1,28 @@
+{% set data = load_setup_py_data() %}
+
+package:
+    name: srange
+    version: {{ data.get('version') }}
+
+source:
+    path: ..
+
+requirements:
+    build:
+        - setuptools
+        - python
+
+    run:
+        - python
+        - numpy
+
+build:
+    noarch: python
+    number: 0
+
+about:
+    home: {{ data.get('url') }}
+    summary: {{ data.get('description') }}
+    license: {{ data.get('license') }}
+    description: {{ data.get('long_description') }}
+    doc_url: https://srange-cmsfork.readthedocs.io

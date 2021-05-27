@@ -1,213 +1,306 @@
 #!/usr/bin/env python
-#
-# srange.py
-#
-# $Id:    $
-# $URL: $
-#
-# Part of the "pydiffract" package
-#
+# -*- coding: utf-8 -*-
 
+import numpy
 import sys
 
-__version__	=	"$Revision: $"
-__author__	=	"Jon Tischler, <tischler@aps.anl.gov>" +\
-				"Christian M. Schlepuetz, <cschlep@aps.anl.gov>, " +\
+__author__	=	"Jon Tischler, <tischler@aps.anl.gov>, " +\
+				"Christian M. Schlepuetz, " +\
 				"Argonne National Laboratory"
-__date__	=	"$Date: $"
-__id__		=	"$Id: $"
+__copyright__ = 'Copyright (c) 2021, Argonne National Laboratory'
+__license__ = 'See license file'
+__docformat__ = 'restructuredtext en'
 
 
 class srange:
 	"""
 	String-range class.
 
-
-	Updated to work with both python 2 & 3 (previously only 2) by JZT on June 12, 2020.
-	Also a suite of tests are included at the end.
-	with conversion to python3, also had to deal with i/j --> float, not int
-
-
 	This class provides functions to convert a string representing integers and
 	ranges of integers to an object which can be iterated over all the values
-	contained in the string.  Also, a list of individual values or subranges can be
-	retrieved.
+	contained in the string. Also, a list of individual values or subranges can
+	be retrieved.
 
-	EXAMPLE::
-		>>> sr = srange("1,3,4-5,8-11,12-13,20")
-		>>> for val in sr:
-					print ("%d," % val),
-		1, 3, 4, 5, 8, 9, 10, 11, 12, 13, 20,
+	The full range specification can be made of up multiple sub-ranges.
+	Sub-ranges are comma-separated from each other and can either specify a
+	single ingeger (e.g.: ``6``), a continuous range of integers by specifying
+	the start and end point separated by a dash (e.g.: ``10-14``), or a
+	continuous range of integers with a positive integer step size, also called
+	a `stride`, which is separated from the start and end point by a colon
+	(e.g.: ``20-35:5``). Note that the end points are always included in the
+	range (somewhat contrary to the behavior of standard python ranges).
 
-	NOTE:
-		String ranges can only contain integer numbers and must be strictly
-		monotonically increasing. Multiple identical values are not allowed.
-		addition of __resort_list() now allows for mis-ordered simple ranges, 
-		but they still must not overlap.
+	Example
+	-------
+	.. code-block:: python
 
-	TODO:
-		The issues of the above note should be addressed to make the code more
-		robust and forgiving. There is no reason one should not specify sub-
-		ranges in arbitrary orders.
+		sr = srange("1,3,4-5,8-11,12-18:2,25")
+		for val in sr:
+			print("%d," % val),
+		1, 3, 4, 5, 8, 9, 10, 11, 12, 14, 16, 18, 25
 
-	The range is checked to be monotonic, it returns None if no more values
-	last is the last number obtained from this range,
-	use -Inf to get start of range, it returns the next
+	Note
+	----
+	String ranges can only contain integer numbers and should be strictly
+	monotonically increasing. Multiple identical values are not allowed.
+	The :meth:`_resort_list` method now allows for some degree of mis-ordered
+	simple ranges, but they still must not overlap.
 
-	variables and methods that you may be interested in
+	Parameters
+	----------
+	range_string : str
+		The string specifying the string range.
+	auto_reset : bool, optional
+		Flag to specify whether the srange object should be reset to its start
+		value after iteration has been completed and the last element has been
+		reached. This rewinds the object, so to speak. If not reset to the
+		first element, the next call iteration will not yield any elements.
+		When setting the flat to `True`, the behavior of srange will be
+		analogous to those of standard lists and arrays. (default = True)
 
-	======================= ===================================================================================
-	variables of interest     description
-	======================= ===================================================================================
-	self.r                  the input string, after formatting and compacting
-	self.previous_item      the previous value produced, initially set very low
-	self.auto_reset         if True (default), then previous_item is reset to min at each call to __iter__
-	======================= ===================================================================================
-
-	======================= ===================================================================================
-	methods of interest        action
-	======================= ===================================================================================
-	next()                  returns next value, updates previous_item too
-	reset_previous()        reset the iterator so it starts with the first value
-	after(prev)             returns value that follows prev, without changing the current point in iteration
-	first()                 returns the first number in the range, for self.r="3,5,9-20", self.first() returns 3
-	last()                  returns the last number in the range, for self.r="3,5,9-20", self.last() returns 20
-	len()                   returns number of points in the range, for self.r="3,5,9-20", self.len() returns 14
-	is_in_range(m)          returns True if m is in self.r, otherwise False
-	index(ipnt)             return the ipntth number from range, first number is ipnt==0,  returns None if ipnt negative or too big
-	val2index(m)            returns index into r that corresponds to m. e.g. for r='3,5,9-20', m=5 returns 1.
-	sub_range(start,n,...)  returns a new range that is a sub range of current one, setLast=False
-	list(self)              returns a list where each element is a value in the range, CAUTION this can make a VERY big list
-	======================= ===================================================================================
-
-	=====================   ======================= ===================================================================
-	special methods          command                    result using: sr = srange('1-4')
-	=====================   ======================= ===================================================================
-	__getitem__(n)          print (sr[2])               3
-	__len__()               print (len(sr))             4
-	__str__()               print (str(sr))             1-4
-	__repr__()              print (repr(sr))            srange('1-4', len=4, previous=0, auto_reset=True)
-	=====================   ======================= ===================================================================
 	"""
 
-	def __init__(self, r='', auto_reset=True):
+	#The range is checked to be monotonic, it returns None if no more values
+	#last is the last number obtained from this range,
+	#use -Inf to get start of range, it returns the next
+
+	#The most useful variables and methods that you may be interested in at a
+	#glance:
+
+	#======================= ===================================================================================
+	#variables of interest   description
+	#======================= ===================================================================================
+	#self.r                  the input string, after formatting and compacting
+	#self.previous_item      the previous value produced, initially set very low
+	#self.auto_reset         if True (default), then previous_item is reset to min at each call to __iter__
+	#======================= ===================================================================================
+
+	#======================= ===================================================================================
+	#methods of interest     action
+	#======================= ===================================================================================
+	#next()                  returns next value, updates previous_item too
+	#reset_previous()        reset the iterator so it starts with the first value
+	#after(prev)             returns value that follows prev, without changing the current point in iteration
+	#first()                 returns the first number in the range, for self.r="3,5,9-20", self.first() returns 3
+	#last()                  returns the last number in the range, for self.r="3,5,9-20", self.last() returns 20
+	#len()                   returns number of points in the range, for self.r="3,5,9-20", self.len() returns 14
+	#is_in_range(m)          returns True if m is in self.r, otherwise False
+	#index(ipnt)             return the ipntth number from range, first number is ipnt==0,  returns None if ipnt negative or too big
+	#val2index(m)            returns index into r that corresponds to m. e.g. for r='3,5,9-20', m=5 returns 1.
+	#sub_range(start,n,...)  returns a new range that is a sub range of current one, setLast=False
+	#list(self)              returns a list where each element is a value in the range, CAUTION this can make a VERY big list
+	#======================= ===================================================================================
+
+	#======================= ================= ===================================================================
+	#special methods         command           result using: sr = srange('1-4')
+	#======================= ================= ===================================================================
+	#__getitem__(n)          print(sr[2])     3
+	#__len__()               print(len(sr))   4
+	#__str__()               print(str(sr))   1-4
+	#__repr__()              print(repr(sr))  srange('1-4', len=4, previous=0, auto_reset=True)
+	#======================= ================= ===================================================================
+
+
+	def __init__(self, range_string='', auto_reset=True):
 		"""
 		Initialize the srange instance.
 		"""
-		try:	self.intTypes = (int, long)		# long is only in python2, not 3
-		except:	self.intTypes = (int)
-		try:	self.MAXINT = sys.maxint		# sys.maxint only exists in python2
-		except:	self.MAXINT = sys.maxsize		# for python3, maxsize is a good choice, = (2^63)-1
+
+		self.l = []
+		''' The list of tupels defining the string range '''
+		self.r = ''
+		''' The string defining the string range '''
+
+		r = range_string
+
+		# Specify the integer type
+		try:
+			self.intTypes = (int, long)	# python2
+		except:
+			self.intTypes = (int)       # python3
+
+		# Set the maximum integer representation available on the system.
+		try:
+			self.MAXINT = sys.maxint	# sys.maxint only exists in python2
+		except:
+			self.MAXINT = sys.maxsize	# for python3, maxsize is a good
+		                                    # choice, = (2^63)-1
 
 		# if a numpy array is passed for r, convert r to an integer array
 		try:
 			if isinstance(r[0], numpy.integer):
-				r_int = []						# a new empty array
-				for i in r: r_int.append(int(i))# fill r_int with ints	
-				r = []							# need to remake r[], do not want the name r_int
-				for i in r_int: r.append(i)		# now reset new r[] to input values (but all ints)
-		except:	pass
+				r_int = []
+				for i in r: r_int.append(int(i))
+				r = r_int.copy()
+		except:
+			pass
 
-		# convert input to a list of tuples, each tuple is one simple dash range, e.g. "1-17:2"
+		# convert input to a list of tuples
+		# each tuple is one simple dash range, e.g. "1-17:2"
 		try:
-			if isinstance(r, unicode): r = r.encode()	# convert any unicode to str
-		except:	pass
-		if isinstance(r,str):
-			if r.lower() == 'none': r = ''		# 'none' is same as empty string
-			self.l = self.__string_to_tuple_list(r)
+			if isinstance(r, unicode): r = r.encode()
+		except:
+			pass
+		if isinstance(r, str):
+			if r.lower() == 'none':
+				r = ''
+			self.l = self._string_to_tuple_list(r)
 		elif isinstance(r, self.intTypes):
 			r = int(r)
 			self.l = [(r,r,1)]
 			r = str(r)
-		elif hasattr(r, '__iter__'):			# this works for list and numpy.array, fails for strings
-			self.l = self.__list_to_srange(r)
+		elif hasattr(r, '__iter__'):
+			# this works for list and numpy.array, fails for strings
+			self.l = self._list_to_srange(r)
 		else:
-			raise TypeError("String list must be a string or (list of) integers.")
+			raise TypeError(
+				"String list must be a string or (list of) integers.")
 
-		if not self.__is_monotonic():
-			self.__resort_list()				# try to sort the list to be monotonic
-			if not self.__is_monotonic():		# if still not monotonic, give up
+		if not self._is_monotonic():
+			# try to sort the list to be monotonic
+			self._resort_list()
+			if not self._is_monotonic():
 				raise ValueError("String range is unsortable.")
 
-		try:	self.auto_reset = bool(auto_reset)
-		except:	raise TypeError("auto_reset must be boolean")
+		try:
+			self.auto_reset = bool(auto_reset)
+		except:
+			raise TypeError("auto_reset must be boolean")
 
-		self.reset_previous()					# set self.previous_item to number before first number in range
-		self.l = self.__compact(self.l)			# compactify the list
-		self.r = self.__tuple_list_to_str(self.l)	# make a string representation of list
+		# set self.previous_item to number before first number in range
+		self.reset_previous()
+		self.l = self._compact(self.l)
+		# make a string representation of list
+		self.r = self._tuple_list_to_str(self.l)
 
 	def __iter__(self):
-		""" The class iterator """
+		"""
+		The class iterator
+		"""
+
 		if self.auto_reset:
-			self.reset_previous()				# reset to start of range, changed July 24-2014 JZT
+			self.reset_previous()
 		return self
 
 	def __repr__(self):
-		""" Return string representation for srange. """
-		try:	length = self.len()
-		except:	length = None
-		return "srange('%s', len=%r, previous=%r, auto_reset=%r)" % (self.r, length, self.previous_item, self.auto_reset)
+		"""
+		Return string representation for srange.
+		"""
+
+		try:
+			length = self.len()
+		except:
+			length = None
+		return "srange('%s', len=%r, previous=%r, auto_reset=%r)" % \
+			(self.r, length, self.previous_item, self.auto_reset)
 
 	def __str__(self):
-		""" Return string value for srange. """
+		"""
+		Return string value for srange.
+		"""
+
 		return self.r
 
 	def __getitem__(self, n):
-		""" Return the n-th element in the string range. """
+		"""
+		Return the n-th element in the string range.
+		"""
+
 		return self.index(n)
 
-	def __next__(self):							# this is required for python3 iterator
-		""" Return the n-th element in the string range. """
+	# this is required for the python3 iterator
+	def __next__(self):
+		"""
+		Return the next value in the string range.
+
+		Also update ``self.previous_item``.
+
+		"""
+
 		return self.next()
 
-	def next(self):								# this is required for python2 iterator
-		""" Return the next value in the string range. Also update self.previous_item. """
+	# this is required for the python2 iterator
+	def next(self):
+		"""
+		Return the next value in the string range.
+
+		Also update ``self.previous_item``.
+
+		Returns
+		-------
+		next_item : int
+			The value of the next item of srange.
+
+		"""
 
 		if not self.l:
 			raise StopIteration
 		for (lo, hi, stride) in self.l:
-			if self.previous_item < lo:			# start of this simple range is big enough
+			if self.previous_item < lo:
 				self.previous_item = lo
 				return lo
-			elif self.previous_item >= lo and self.previous_item < hi:	# within this simple range
-				self.previous_item += stride - ((self.previous_item-lo) % stride)
+			elif self.previous_item >= lo and self.previous_item < hi:
+				self.previous_item += \
+					stride - ((self.previous_item-lo) % stride)
 				return self.previous_item
-#		self.reset_previous()					# removed July 21-2014 JZT, do NOT reset at end of range
 		raise StopIteration
 
 	def after(self, val):
 		"""
-		Return the value or the element that follows after the given value.
+		Return the value of the next element in srange after the given value.
 
-		EXAMPLE::
+		Parameters
+		----------
+		val : int
+			The value after which the next value in the string range shoud be
+			returned.
+
+		Returns
+		-------
+		next_val : int
+			The next value in the string range after the specified `val` value.
+
+		Example
+		-------
+		.. code-block:: python
+
 			>>> sr = srange("3,5,9-20")
-			>>> print (sr.after(5))
+			>>> print(sr.after(5))
 			9
+
 		"""
 
 		if not self.l:
 			return None
-		previous_save = self.previous_item		# save self.previous_item for later resetting
+		previous_save = self.previous_item
 		try:
-			self.previous_item = int(val)		# temporarily set self.previous_item to val
+			self.previous_item = int(val)
 		except:
 			raise ValueError("argument to srange.after() must be a number")
 		try:
 			after = self.next()
 		except:
 			after = None
-		self.previous_item = previous_save		# reset self.previous_item to original value
+		self.previous_item = previous_save
 		return after
 
 	def first(self):
 		"""
 		Return the number of the first item in the range.
-		This method uses but does not change any internal variables, e.g. no self.xxxx
 
-		EXAMPLE::
+		Returns
+		-------
+		first_item : int
+			The value of the first item of srange.
+
+		Example
+		-------
+		.. code-block:: python
+
 			>>> sr = srange("3,5,9-20")
-			>>> print (sr.first())
+			>>> print(sr.first())
 			3
+
 		"""
 
 		if not self.l:
@@ -217,12 +310,20 @@ class srange:
 	def last(self):
 		"""
 		Return the value of the last item in the range.
-		This method uses but does not change any internal variables, e.g. no self.xxxx
 
-		EXAMPLE::
+		Returns
+		-------
+		last_item : int
+			The value of the last item in srange.
+
+		Example
+		-------
+		.. code-block:: python
+
 			>>> sr = srange("3,5,9-20")
-			>>> print (sr.last())
+			>>> print(sr.last())
 			20
+
 		"""
 
 		if not self.l:
@@ -232,33 +333,61 @@ class srange:
 	def len(self):
 		"""
 		Return the number of items in the string range.
-		This method uses but does not change any internal variables, e.g. no self.xxxx
 
-		EXAMPLE::
+		Returns
+		-------
+		len : int
+			The length (i.e.: number or items) of srange.
+
+		Example
+		-------
+		.. code-block:: python
+
 			>>> sr = srange("3,5,9-20")
-			>>> print (sr.len())
+			>>> print(sr.len())
 			14
+
 		"""
 
-		if not self.l: 
+		if not self.l:
 			return 0
 
 		total = 0
 		for (lo, hi, stride) in self.l:
-#			total += (hi-lo)/stride + 1			# accumulate length of each simple range
-			total += int((hi-lo)/stride) + 1	# accumulate length of each simple range, python3 (/ --> float)
+			total += int((hi-lo)/stride) + 1
 		return total
 
 	def __len__(self):
-		""" This is redundant with len(), you can use s.len(), or len(s).
-		This method uses but does not change any internal variables, e.g. no self.xxxx
 		"""
+		Return the number of items in the string range.
+
+		This is complementary to :meth:`len`, so you can use ``sr.len()`` or
+		``len(sr)``.
+
+		Returns
+		-------
+		len : int
+			The length (i.e.: number or items) of srange.
+
+		"""
+
 		return self.len()
 
 	def is_in_range(self, item):
 		"""
-		Return True if item is in string range self.r, False otherwise.
-		This method uses but does not change any internal variables, e.g. no self.xxxx
+		Check whether an item is contained in the string range.
+
+		Parameters
+		----------
+		item : int
+			The integer value which is to be checked whether it is contained in
+			the string range.
+
+		Returns
+		-------
+		in_range : bool
+			True if item is in string range, False otherwise.
+
 		"""
 
 		if not self.l:
@@ -274,20 +403,40 @@ class srange:
 	def index(self, n):
 		"""
 		Return the n-th element from the string range.
-		This method uses but does not change any internal variables, e.g. no self.xxxx
+
+		Indices in srange are zero-based, as is the default in python
+
+		Parameters
+		----------
+		n : int
+			The index of the value to return in srange.
+
+		Returns
+		-------
+		val : int
+			The value of srange found at the index `n`.
+
+		Example
+		-------
+		.. code-block:: python
+
+			>>> sr = srange("3,5,9-20")
+			>>> print(sr.index(3))
+			10
+
 		"""
 
 		if not self.l:
 			raise ValueError('String range is empty.')
 		elif not isinstance(n, self.intTypes):
-			raise TypeError('Element must be an integer number, not a '+str(type(n)))
+			raise TypeError('Element must be an integer number, not a ' +
+				str(type(n)))
 		elif (n < 0):
 			raise ValueError('Index must be non-negative, not '+str(n))
 
 		count = 0
 		for (lo, hi, stride) in self.l:
-#			hi_count = count + (hi-lo)/stride	# count at hi
-			hi_count = count + int((hi-lo)/stride)	# count at hi, in python3 i/j --> float
+			hi_count = count + int((hi-lo)/stride)
 			if n <= hi_count:
 				return lo + (n-count)*stride
 			count = hi_count + 1
@@ -295,46 +444,89 @@ class srange:
 
 	def val2index(self, val):
 		"""
-		Return the index into the srange that corresponds to val.
-		This method uses but does not change any internal variables, e.g. no self.xxxx
+		Return the index of a value in srange.
 
-		EXAMPLE::
+		Parameters
+		----------
+		val : int
+			The value in srange for which the index is to be returned.
+
+		Returns
+		-------
+		index : int or None
+			The index into the srange that corresponds to `val`. If `val` is
+			not in srange, None is returned.
+
+		Example
+		-------
+		.. code-block:: python
+
 			>>> r = '3, 5, 9-20'
-			>>> print (val2index(5))
+			>>> print(val2index(5))
 			1
+
+		Raises
+		------
+		ValueError
+			If srange is empty.
+		TypeError
+			if `val` is not an integer.
+
 		"""
 
 		if not self.l:
 			raise ValueError("String range is empty.")
 		elif not isinstance(val, self.intTypes):
-			raise TypeError('Value must be an integer, not a '+str(type(n)))
+			raise TypeError('Value must be an integer, not a ' + str(type(val)))
 
 		index = 0
 		for (lo, hi, stride) in self.l:
-			if lo <= val and val <= hi:			# val is in this simple range
-				index += float(val-lo)/stride
+			if lo <= val and val <= hi:
+				index += float(val - lo) / stride
 				if index.is_integer():
 					return int(index)
 				else:
 					return None
-			index += int(hi-lo+1) / int(stride)	# increment index for next simple range
+			index += int(hi - lo + 1) / int(stride)
 		return None
-
 
 	def sub_range(self, start, n, set_last=False):
 		"""
 		Return a sub range from the original range as a new range string.
 
-		The new range starts at with the value start and has up to n elements.
-		If start is not an element in the range, then it begin with first element 
-		after start. If set_last is True, then self.previous_item is set to the new 
-		end, otherwise no change is made.
-		This method only changes an internal variable "self.previous_item" when set_last is True.
+		The new range starts with the value `start` and has up to `n`
+		elements. If `start` is not an element in the range, then it begin with
+		the first element after `start`. If `set_last` is ``True``, then
+		``self.previous_item`` is set to the new end, otherwise no change is
+		made.
 
-		EXAMPLE::
+		This method only changes the member variable ``self.previous_item``
+		when `set_last` is ``True``.
+
+		Parameters
+		----------
+		start : int
+			The start value of the sub range.
+		n : int
+			The number of elements to include in the sub range.
+		set_last : bool, optional
+			If set to True, the internal member variable of the srange instance
+			will be set to the last returned item so the next call to iterate
+			over srange will continue from there. (default = False)
+
+		Returns
+		-------
+		r : str
+			The string representing the sub-range.
+
+		Example
+		-------
+		.. code-block:: python
+
 			>>> sr = srange('3,5,9-20')
-			>>> print (sr.sub_range(start = 5, n = 3))
-			5,9-10
+			>>> print(sr.sub_range(start = 5, n = 3))
+			'5,9-10'
+
 		"""
 
 		if not self.l:
@@ -346,51 +538,56 @@ class srange:
 		elif n < 0:
 			raise ValueError("Number of elements must be greater zero.")
 
-		hi = self.last()						# in case hi not set in loop
+		hi = self.last()
 		lout = []
 		for (lo, hi, stride) in self.l:
-			if hi < start:						# try next simple range
+			if hi < start:
 				continue
-			start = max(start,lo)
-			lo = start + ((start-lo) % stride)	# either start or first number after start
-			hi = min(lo + (n-1)*stride, hi)
-			if lo>hi:							# nothing in this simple range
+			start = max(start, lo)
+			lo = start + ((start - lo) % stride)
+			hi = min(lo + (n - 1) * stride, hi)
+			if lo > hi:
 				continue
-#			n -= (hi-lo)/stride + 1
-			n -= int((hi-lo)/stride) + 1		# in python3 i/j --> float
-			lout.append((lo,hi,stride))
+			n -= int((hi - lo) / stride) + 1
+			lout.append((lo, hi, stride))
 			if n < 1:
 				break
 
-		if set_last:							# set previous_item was requested
+		if set_last:
 			self.previous_item = hi
 
-		lout = self.__compact(lout)				# compactify the list
-		return self.__tuple_list_to_str(lout)	# return the string
-
-
+		lout = self._compact(lout)
+		return self._tuple_list_to_str(lout)
 
 	def list(self):
 		"""
-		Expand a string range into a standard python  list.
-		This method uses but does not change any internal variables, e.g. no self.xxxx
+		Expand a string range into a standard python list.
 
-		EXAMPLE::
-			>>> print (srange("3,5,9-13").list())
+		Warning
+		-------
+		The following statement::
+
+			srange("1-100000").list()
+
+		will produce a list with 100000 elements!
+
+		Returns
+		-------
+		out_list : list
+			All integers contained in the srange as a list.
+
+		Example
+		-------
+		.. code-block:: python
+
+			>>> print(srange("3,5,9-13").list())
 			[3, 5, 9, 10, 11, 12, 13]
 
-		CAUTION:
-			The following statement::
-
-				>>> list("1-100000",";")
-
-			will produce a list with 100000 elements!
-
-		Max list length for a 32 bit system is (2^32 - 1)/2/4 = 536870912
-		on my computer I get a MemoryError for lengths > 1e8, so limit to 1e7
 		"""
 
-		if self.len() > 10000000:				# 1e7, a big number
+		# Max list length for a 32 bit system is (2^32 - 1)/2/4 = 536870912
+		# On my computer I get a MemoryError for lengths > 1e8, so limit to 1e7
+		if self.len() > 1e7:
 			raise IndexError("Resulting list too large, > 1e7.")
 		elif not self.l:
 			return []
@@ -402,26 +599,44 @@ class srange:
 
 
 	def reset_previous(self):
-		""" Reset previous_item to the lowest possible integer value. """
+		"""
+		Reset previous_item to the lowest possible integer value.
+		"""
+
 		try:
 			l0 = self.l[0]
-			self.previous_item = int(l0[0]-1)	# in python2, the srange may need longs
+			self.previous_item = int(l0[0]-1)
 		except:
-			self.previous_item = -self.MAXINT	# just set to most negative 32bit int
+			self.previous_item = -self.MAXINT
 
-
-	def __list_to_srange(self, input_list):
+	def _list_to_srange(self, input_list):
 		"""
-		Convert a python list to a string range, the tuple list.
-		This method neither uses nor changes any internal variables, e.g. no self.xxxx
-		Also this routine does NOT compact the returned list, you must do that.
+		Convert a python list to a string range tuple list.
 
-		EXAMPLE::
-			>>> mylist = [3,5,9,10,11,12]
+		Note
+		----
+		This routine does **not** compact the returned list. If this is needed,
+		you must do this afterwards.
+
+		Parameters
+		----------
+		input_list : list
+			The pyton list with integers to be converted to an srange.
+
+		Example
+		-------
+		.. code-block:: python
+
+			>>> mylist = [3,5,9,10,11,12,14,16,18,20]
 			>>> sr = srange('')
-			>>> sr.__list_to_srange(mylist)
-			>>> print (sr)
-			'3,5,9-12'
+			>>> tuple_list = sr._list_to_srange(mylist)
+			>>> print(tuple_list)
+			[(3, 3, 1), (5, 5, 1), (9, 9, 1), (10, 10, 1), (11, 11, 1),
+			 (12, 12, 1), (14, 14, 1), (16, 16, 1), (18, 18, 1), (20, 20, 1)]
+			>>> tuple_list_compact = sr._compact(tuple_list)
+			>>> print(tuple_list_compact)
+			[(3, 3, 1), (5, 5, 1), (9, 12, 1), (14, 20, 2)]
+
 		"""
 
 		if not all(isinstance(n, self.intTypes) for n in input_list):
@@ -432,13 +647,34 @@ class srange:
 			new_tuple_list.append((item,item,1))
 		return new_tuple_list
 
-	def __string_to_tuple_list(self,r):
+	def _string_to_tuple_list(self,r):
 		"""
-		Convert a string range to a list of simple ranges, tuples of the form (lo,hi,stride).
-		r is the string, usually input at __init__(...)
-		This routine does no compacting, just a simple translation
-		Note, all values in the tuple list are integers.
-		This method neither uses nor changes any internal variables, e.g. no self.xxxx
+		Convert a string range to a list of simple ranges.
+
+		The simple ranges are tuples of the form (lo, hi, stride).
+		This routine does no compacting, just a simple translation.
+		All values in the tuple list are integers.
+
+		Parameters
+		----------
+		r : str
+			The string representing the string range.
+
+		Returns
+		-------
+		l : list of tuples
+			The list of simple range tuples.
+
+		Example
+		-------
+
+		.. code-block:: python
+
+			>>> r = '2-5,13,24-32:3'
+			>>> sr = srange('')
+			>>> print(sr._string_to_tuple_list(r))
+			[(2, 5, 1), (13, 13, 1), (24, 30, 3)]
+
 		"""
 
 		if not r:
@@ -448,17 +684,18 @@ class srange:
 			raise ValueError("Invalid character ('@') in string range.")
 
 		l = []
-		singles = r.split(',')					# split string into a list of simple ranges
+		singles = r.split(',')
 		for single in singles:
 			s = single.lstrip()
 
 			# look for a stride
-			lo,mid,hi = s.partition(":")
+			lo, mid, hi = s.partition(":")
 			try:	val = float(hi)
-			except:	val = 1.0					# default stride is 1
+			except:	val = 1.0
 			stride = int(val)
-			if not val.is_integer() or stride<=0:
-				raise ValueError("stride is not a positive integer in string range.")
+			if not val.is_integer() or stride <= 0:
+				raise ValueError(
+					"stride is not a positive integer in string range.")
 			s = lo
 
 			# A '-' after the first character indicates a contiguous range
@@ -467,7 +704,7 @@ class srange:
 			i = s[1:].find('-') + 1
 			if i > 0:
 				s = s[0:i] + '@' + s[i+1:]
-			lo,mid,hi = s.partition('@')
+			lo, mid, hi = s.partition('@')
 			lo = lo.strip()
 			if lo.lower().find('-inf') >= 0:
 				lo = -self.MAXINT
@@ -486,7 +723,7 @@ class srange:
 					hi = self.MAXINT
 				try:
 					hi = int(hi)
-					hi -= ((hi-lo) % stride)	# ensure that hi matches with stride, remove excess
+					hi -= ((hi - lo) % stride)
 				except:
 					raise ValueError("Values in string range must be integer.")
 			else:
@@ -497,28 +734,41 @@ class srange:
 
 		return l
 
-	def __resort_list(self):
-		""" Re-order the set of tuples in self.l to be montonic. """
+	def _resort_list(self):
+		"""
+		Re-order the set of tuples in self.l to be montonically increasing.
+		"""
 
-		loVals = []								# a list of the lo values
-		for l in self.l:						# first produces the sorted indicies
+		loVals = []
+		for l in self.l:
 			loVals.append(l[0])
 		ii = sorted(range(len(loVals)), key=loVals.__getitem__)
 
 		lnew = []
-		for i in ii:							# rebuild a sorted list from indicies
+		for i in ii:
 			lnew.append(self.l[i])
 		self.l = lnew
 
-	def __is_monotonic(self):
+	def _is_monotonic(self):
 		"""
-		Return True if the tuple list self.l is monotonic, False otherwise.
-		An empty range is assume to be monotonic.
-		This method does not change any internal variables, e.g. no self.xxxx
+		Check whether the string range is monotonic.
+
+		An empty range is assumed to be monotonic.
+
+		Returns
+		-------
+		is_monotonic : bool
+
+			Returns ``True`` if the tuple list self.l is monotonic, ``False``
+			otherwise.
+
 		"""
 
-		try:	last_hi = int((self.l[0])[0]) - 1
-		except:	return True						# empty range is assumed monotonic.
+		try:
+			last_hi = int((self.l[0])[0]) - 1
+		except:
+			# empty range is assumed monotonic.
+			return True
 
 		for (lo, hi, stride) in self.l:
 			if (hi < lo) or (stride < 1) or (last_hi >= lo):
@@ -526,15 +776,34 @@ class srange:
 			last_hi = hi
 		return True
 
-	def __tuple_list_to_str(self,l):
+	def _tuple_list_to_str(self,l):
 		"""
 		Convert a list of tuples to a string.
-		This does NO compacting, just change the list l to a string.
-		This method neither uses nor changes any internal variables, e.g. no self.xxxx
 
-		EXAMPLE::
-			>>> print (self.__tuple_list_to_str([(0, 0, 1), (2, 3, 1), (4, 8, 2)]))
+		Note
+		----
+		This does NO compacting, just change the list l to a string.
+
+		Parameters
+		----------
+		l : list of tuples
+			The list of tupels to be converted to a string representing the
+			srange.
+
+		Returns
+		-------
+		r : str
+			The string representing the srange.
+
+		Example
+		-------
+		.. code-block:: python
+
+			>>> sr = srange('')
+			>>> input_list = [(0, 0, 1), (2, 3, 1), (4, 8, 2)]
+			>>> print(sr._tuple_list_to_str(input_list))
 			'0,2-3,4-8:2'
+
 		"""
 
 		if not l: return ''
@@ -542,97 +811,137 @@ class srange:
 		range_string = ''
 		for (lo, hi, stride) in l:
 			range_string += str(lo)
-			if hi>lo:							# a lo-hi range
-				range_string += '-'+str(hi)
-				if stride>1:
-					range_string += ':'+str(stride)
+			if hi > lo:
+				range_string += '-' + str(hi)
+				if stride > 1:
+					range_string += ':' + str(stride)
 			range_string += ','
 
 		return range_string.rstrip(',')
 
-	def __compact(self,l):
+	def _compact(self,l):
 		"""
 		Return the most compact way of describing a string range.
-		This method neither uses nor changes any internal variables, e.g. no self.xxxx
 
-		EXAMPLE::
-			>>> ## sr = srange('0,2,3,4-8:2')
-			>>> l = self.__compact([(0, 0, 1), (2, 3, 1), (4, 8, 2)])
-			>>> print (l)
-			[(1, 4, 1), (6, 6, 1)]
+		Note
+		----
+		Compacting is always done during initialization.
+
+		Parameters
+		----------
+		l : list of tuples
+			The list of tupels to be converted to a string representing the
+			srange.
+
+		Returns
+		-------
+		l_compact : list of tuples
+			The compacted version of the input tuple list.
+
+		Example
+		-------
+		.. code-block:: python
+
+			>>> sr = srange('')
+			>>> l = [(0, 1, 1), (2, 3, 1), (4, 12, 2), (14, 14,1), (16,18,2)]
+			>>> print(sr._compact(l))
+			[(0, 3, 1), (4, 18, 2)]
 
 
-		NOTE:
-			Compacting is always done during initialization.
 		"""
- 
+
 		if not l: return None
 
-		# first, see if there are any single value runs of 3 or more that can be combined into a stride
-		# only combine simple ranges when there are 3 numbers in a row with the same stride.
-		lcombine = []							# list or simple ranges to combine
+		# first, see if there are any single value runs of 3 or more that can
+		# be combined into a stride only combine simple ranges when there are
+		# 3 numbers in a row with the same stride.
+		lcombine = []
 		count = 0
 		i = 0
 		new_stride = -1
 		for (lo, hi, stride) in l:
-			if not (lo==hi):					# reset for next search, start again
-				if count > 2:					# done with this run, save info
-					lcombine.append((istart,istart+count-1,new_stride))
+			if not (lo == hi):
+				# reset for next search, start again
+				if count > 2:
+					# done with this run, save info
+					lcombine.append((istart, istart+count-1, new_stride))
 				new_stride = -1
 				istart = -1
 				count = 0
-			elif count==1:
-				new_stride = lo - last_hi		# set the new stride
+			elif count == 1:
+				# set the new stride
+				new_stride = lo - last_hi
 				count = 2
-			elif count>1 and (lo-last_hi)==new_stride:
-				count += 1						# accumulate more in this stride
-			elif count > 2:						# done with this run, save info
-				lcombine.append((istart,istart+count-1,new_stride))
-				new_stride = -1					# reset for next search
+			elif count > 1 and (lo-last_hi) == new_stride:
+				# accumulate more in this stride
+				count += 1
+			elif count > 2:
+				# done with this run, save info
+				lcombine.append((istart, istart+count-1, new_stride))
+				# reset for next search
+				new_stride = -1
 				count = 1
 				istart = i
-			else:								# possibly start of a new stride
-				new_stride = -1					# reset for next search
+			else:
+				# possibly start of a new stride
+				# reset for next search
+				new_stride = -1
 				count = 1
 				istart = i
 			i += 1
 			last_hi = hi
 
-		if count > 2:							# one more to append
-			lcombine.append((istart,istart+count-1,new_stride))
+		if count > 2:
+			# one more to append
+			lcombine.append((istart, istart+count-1, new_stride))
 
-		ltemp = []								# contains a shorter list using info in lcombine
-		i0 = 0									# next one to do
-		for (lc0, lc1, stride) in lcombine:		# move ranges from l to ltemp
-			for i in range(lc0-i0):				# just copy [i0,lc0-1]
+		# next one to do
+		ltemp = []
+		i0 = 0
+		for (lc0, lc1, stride) in lcombine:
+			# move ranges from l to ltemp
+			for i in range(lc0-i0):
+				# just copy [i0,lc0-1]
 				ltemp.append(l[i+i0])
-			lo = (l[lc0])[0]				
+			lo = (l[lc0])[0]
 			hi = (l[lc1])[1]
 			ltemp.append((lo,hi,stride))
 			i0 = lc1+1
 
-		for i in range(len(l)-i0):				# move any remaining simple ranges from l to ltemp
+		# move any remaining simple ranges from l to ltemp
+		for i in range(len(l)-i0):
 			ltemp.append(l[i+i0])
 
-		# second, see if you can concatenate any simple ranges having the same stride
-		# only combine ranges if one of them has hi>lo, do not combine two single number ranges.
+		# second, see if you can concatenate any simple ranges having the same
+		# stride only combine ranges if one of them has hi > lo, do not combine
+		# two single number ranges.
 		lnew = []
 		(last_lo, last_hi, last_stride) = ltemp[0]
-		last_single = last_lo==last_hi
+		last_single = (last_lo == last_hi)
 		for (lo, hi, stride) in ltemp:
-			single = lo==hi
-			if lo==last_lo:													# the first one of ltemp[0], skip this
+			single = (lo == hi)
+			if lo == last_lo:
+				# the first one of ltemp[0], skip this
 				continue
-			elif single and (not last_single) and last_hi+last_stride == lo:# last complex joins current single
+			elif single and (not last_single) and last_hi + last_stride == lo:
+				# last complex joins current single
 				last_hi = hi
-			elif (not single) and last_single and last_hi+stride ==lo:		# last single joins current complex
-				last_hi, last_stride, last_single = (hi, stride, False)		# re-set last (last_lo not changed)
-			elif (not single) and (not last_single) and last_hi+stride==lo and stride==last_stride: # join two complex with same stride
+			elif (not single) and last_single and last_hi + stride == lo:
+				# last single joins current complex
+				# re-set last (last_lo not changed)
+				last_hi, last_stride, last_single = (hi, stride, False)
+			elif ((not single) and (not last_single) and
+					last_hi+stride == lo and stride == last_stride):
+				# join two complex with same stride
 				last_hi = hi
 			else:
-				lnew.append((last_lo,last_hi,last_stride))					# append last
-				last_lo, last_hi, last_stride = (lo, hi, stride)			# re-set last to current
-				last_single = last_lo==last_hi
+				# append last
+				lnew.append((last_lo,last_hi,last_stride))
+				# re-set last to current
+				last_lo, last_hi, last_stride = (lo, hi, stride)
+				last_single = (last_lo == last_hi)
 
-		lnew.append((last_lo,last_hi,last_stride))							# append the last one
+		# append the last one
+		lnew.append((last_lo, last_hi, last_stride))
+
 		return lnew

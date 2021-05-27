@@ -8,7 +8,7 @@ Your two Python source code files have been joined by more stuff.
 
 .. This document was written in ReSTructured text format.
    Mostly, it looks like plain text.  This is a comment.
-   
+
    Here are acouple helpful links:
    http://sphinx-doc.org/rest.html
    https://en.wikipedia.org/wiki/ReStructuredText
@@ -77,6 +77,7 @@ TODO
 * upload project to PyPI
 * register with readthedocs.org as a user
 * configure documentation for publication at readthedocs.org
+* Build conda package and upload to a dedicated conda channel
 
 revisions to setup.py
 ~~~~~~~~~~~~~~~~~~~~~
